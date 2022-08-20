@@ -1,0 +1,10 @@
+{
+    "LOGGING": {
+        "logfile": "program.log",
+        "loglevel": "debug",
+        "logstring": "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s"
+    },
+    "TRANSSVN-TO-GIT": {
+        "workingfolder": "./work"
+    }
+}
