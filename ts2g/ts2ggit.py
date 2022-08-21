@@ -24,12 +24,16 @@ SOFTWARE.
 ******************************************************************************
 '''
 
+import glob
 import logging
+import os
 
-from git import Repo
+import git
 
 from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2gos import TS2GOS
+
+# https://www.devdungeon.com/content/working-git-repositories-python#toc-11
 
 
 class TS2GGIT:
@@ -51,12 +55,34 @@ class TS2GGIT:
         if not self.oshandler.workspaceFolderCreate(self.config.git_project):
             return False
 
-        projectRepo = Repo.init(self.projectFolder)
+        projectFolder: str = self.getRepositoryPath()
+        projectRepo = git.Repo.init(projectFolder)
         if not projectRepo:
-            logging.error('Cannot create bare repo [%s]', '{}'.format(self.projectFolder))
+            logging.error('Cannot create bare repo [%s]', '{}'.format(projectFolder))
             return False
 
         return True
 
     def getRepositoryPath(self: object) -> str:
-        return self.projectFolder
+        return os.path.join(self.projectFolder, '')
+
+    def getRepositoryName(self: object) -> str:
+        return self.config.git_project
+
+    def getRepositoryAdd(self: object, message: str):
+        try:
+            projectFolder: str = self.getRepositoryPath()
+            projectRepo = git.Repo(projectFolder)
+            for filename in glob.iglob(projectFolder + '**/**', recursive=True):
+                fname: str = str(filename)
+                if os.path.isdir(fname):
+                    # Skip directories
+                    continue
+                gitFile: str = fname.replace(projectFolder, '')
+                if gitFile.startswith('\.git'):
+                    # Skip everything of special git folder
+                    continue
+                projectRepo.index.add([gitFile])
+            projectRepo.index.commit(message)
+        except Exception as ex:
+            logging.error('Exception [%s]', '{}'.format(ex))

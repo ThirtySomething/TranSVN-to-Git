@@ -54,11 +54,6 @@ class TS2GSVN:
         path_parts = url_parts[2].rpartition('/')
         return path_parts[2]
 
-    def __getCheckoutName__(self: object, revision: int) -> str:
-        revisionName: str = 'svn_' + self.repositoryname + '_' + str(revision)
-        checkoutName: str = self.oshandler.workspaceFolderGet(revisionName)
-        return checkoutName
-
     def getMaxRevisionNumber(self: object) -> int:
         reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
         repoInfo = reopClient.info()
@@ -74,7 +69,8 @@ class TS2GSVN:
     def getCommitMessage(self: object, checkout: str, revision: int) -> str:
         message: str = ''
         try:
-            proc = subprocess.Popen(['svn', '--non-interactive', 'log', '-r', str(revision) + ':' + str(revision), '--xml', checkout], stdout=subprocess.PIPE)
+            pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
+            proc = subprocess.Popen(['svn', '--non-interactive', 'log', '-r', str(revision) + ':' + str(revision), '--xml', pathCheckout], stdout=subprocess.PIPE)
             output = proc.stdout.read()
             svnXml: str = output.decode('ascii')
             root = ET.fromstring(svnXml)
@@ -85,8 +81,9 @@ class TS2GSVN:
         return message
 
     def checkoutRevision(self: object, revision: int) -> str:
-        pathCheckout: str = self.__getCheckoutName__(revision)
+        revisionName: str = 'svn_' + self.repositoryname + '_' + str(revision)
+        pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
         logging.info('Checkout revision [%s] to [%s]', '{}'.format(revision), '{}'.format(pathCheckout))
         reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
         reopClient.checkout(pathCheckout, revision)
-        return pathCheckout
+        return revisionName

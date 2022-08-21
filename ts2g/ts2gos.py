@@ -26,6 +26,28 @@ SOFTWARE.
 
 import logging
 import os
+import shutil
+
+
+def onerror(func, path, exc_info):
+    """
+    Error handler for ``shutil.rmtree``.
+
+    If the error is due to an access error (read only file)
+    it attempts to add write permission and then retries.
+
+    If the error is for another reason it re-raises the error.
+
+    Usage : ``shutil.rmtree(path, onerror=onerror)``
+    """
+    import stat
+
+    # Is the error an access error?
+    if not os.access(path, os.W_OK):
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+    else:
+        raise
 
 
 class TS2GOS:
@@ -64,3 +86,25 @@ class TS2GOS:
     def workspaceFolderGet(self: object, folder: str) -> str:
         workspaceFolder = os.path.join(self.workspaceBase, folder)
         return workspaceFolder
+
+    def workspaceFolderDelete(self: object, folder: str) -> None:
+        try:
+            folder2Delete: str = self.workspaceFolderGet(folder)
+            logging.debug('folder2Delete [%s]', '{}'.format(folder2Delete))
+            # Trick used with the onerror, see also
+            # https://stackoverflow.com/questions/2656322/shutil-rmtree-fails-on-windows-with-access-is-denied
+            shutil.rmtree(folder2Delete, ignore_errors=False, onerror=onerror)
+        except Exception as ex:
+            logging.error('Exception [%s]', '{}'.format(ex))
+
+    def workspaceFolderCopy(self: object, foldersrc: str, folderdst: str):
+        src: str = self.workspaceFolderGet(foldersrc)
+        dst: str = self.workspaceFolderGet(folderdst)
+        logging.debug('Copy [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
+        shutil.copytree(src, dst)
+
+    def workspaceFolderRename(self: object, foldersrc: str, folderdst: str):
+        src: str = self.workspaceFolderGet(foldersrc)
+        dst: str = self.workspaceFolderGet(folderdst)
+        logging.debug('Rename [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
+        os.rename(src, dst)
