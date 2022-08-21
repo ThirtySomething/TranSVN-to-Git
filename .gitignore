@@ -112,3 +112,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Project TransSVN-to-Git ignores
+program.json
+program.log
+venv
+workspace

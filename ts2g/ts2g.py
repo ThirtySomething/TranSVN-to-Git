@@ -25,24 +25,30 @@ SOFTWARE.
 '''
 
 import logging
-import logging.config
 
-from ts2g.ts2g import TS2G
 from ts2g.ts2gconfig import TS2GConfig
+from ts2g.ts2ggit import TS2GGIT
+from ts2g.ts2gos import TS2GOS
+from ts2g.ts2gsvn import TS2GSVN
 
-TS2G_CONFIG = TS2GConfig('program.json')
-TS2G_CONFIG.save()
 
-# Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
-LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(TS2G_CONFIG.logging_loglevel.upper())
-LOGGER_HANDLER = logging.FileHandler(TS2G_CONFIG.logging_logfile, 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter(TS2G_CONFIG.logging_logstring))
-LOGGER_SETUP.addHandler(LOGGER_HANDLER)
+class TS2G:
+    '''
+    Class to control the process of the repository transformation
+    '''
 
-# Script to convert a Subversion repository to a git repository
-if __name__ == '__main__':
-    logging.info('debugFlag is set to [%s]', '{}'.format(TS2G_CONFIG.logging_loglevel.upper()))
-    converter = TS2G(TS2G_CONFIG)
-    status = converter.process()
-    logging.info('process result is [%s]', '{}'.format(status))
+    def __init__(self: object, config: TS2GConfig) -> None:
+        self.config: TS2GConfig = config
+        self.oshandler: TS2GOS = TS2GOS(self.config.ts2g_workspace)
+        self.githandler: TS2GGIT = TS2GGIT(self.config, self.oshandler)
+        self.svnhandler: TS2GSVN = TS2GSVN(self.config, self.oshandler)
+        logging.debug('config [%s]', '{}'.format(self.config))
+
+    def process(self: object) -> bool:
+        if False == self.oshandler.workspaceFolderCreate(''):
+            return False
+
+        if False == self.githandler.initProjectRepository():
+            return False
+
+        return True

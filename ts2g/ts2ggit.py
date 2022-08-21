@@ -25,24 +25,35 @@ SOFTWARE.
 '''
 
 import logging
-import logging.config
 
-from ts2g.ts2g import TS2G
+from git import Repo
+
 from ts2g.ts2gconfig import TS2GConfig
+from ts2g.ts2gos import TS2GOS
 
-TS2G_CONFIG = TS2GConfig('program.json')
-TS2G_CONFIG.save()
 
-# Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
-LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(TS2G_CONFIG.logging_loglevel.upper())
-LOGGER_HANDLER = logging.FileHandler(TS2G_CONFIG.logging_logfile, 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter(TS2G_CONFIG.logging_logstring))
-LOGGER_SETUP.addHandler(LOGGER_HANDLER)
+class TS2GGIT:
+    '''
+    Class to control the Subversion operations
+    '''
 
-# Script to convert a Subversion repository to a git repository
-if __name__ == '__main__':
-    logging.info('debugFlag is set to [%s]', '{}'.format(TS2G_CONFIG.logging_loglevel.upper()))
-    converter = TS2G(TS2G_CONFIG)
-    status = converter.process()
-    logging.info('process result is [%s]', '{}'.format(status))
+    def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
+        self.config: TS2GConfig = config
+        self.oshandler: TS2GOS = oshandler
+        self.projectFolder: str = self.oshandler.workspaceFolderGet(self.config.git_project)
+        logging.debug('projectFolder [%s]', '{}'.format(self.projectFolder))
+
+    def initProjectRepository(self: object) -> bool:
+        if self.oshandler.workspaceFolderExists(self.projectFolder):
+            logging.error('Git project [%s] already exists in workspace [%s]', '{}'.format(self.config.git_project), '{}'.format(self.oshandler.workspaceBaseGet()))
+            return False
+
+        if not self.oshandler.workspaceFolderCreate(self.config.git_project):
+            return False
+
+        projectRepo = Repo.init(self.projectFolder)
+        if not projectRepo:
+            logging.error('Cannot create bare repo [%s]', '{}'.format(self.projectFolder))
+            return False
+
+        return True

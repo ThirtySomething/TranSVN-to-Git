@@ -31,14 +31,17 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../ve
 
 from MDO import MDO
 
-
 class TS2GConfig(MDO):
     '''
     Contains dynamic settings of TS2G
     '''
 
     def setup(self: object) -> bool:
-        self.add('logging', 'logfile', 'program.log')
-        self.add('logging', 'loglevel', 'info')
-        self.add('logging', 'logstring', '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s')
-        self.add('TRANSSVN-TO-GIT', 'workingfolder', './work')
+        self.add('GIT', 'project', '<enter project name here>')
+        self.add('LOGGING', 'logfile', 'program.log')
+        self.add('LOGGING', 'loglevel', 'info')
+        self.add('LOGGING', 'logstring', '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s')
+        self.add('SVN', 'password', '<enter password here>')
+        self.add('SVN', 'repository', '<enter svn url here>')
+        self.add('SVN', 'user', '<enter user here>')
+        self.add('TS2G', 'workspace', './workspace')
