@@ -57,3 +57,6 @@ class TS2GGIT:
             return False
 
         return True
+
+    def getRepositoryPath(self: object) -> str:
+        return self.projectFolder

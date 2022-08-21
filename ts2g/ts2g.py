@@ -44,11 +44,27 @@ class TS2G:
         self.svnhandler: TS2GSVN = TS2GSVN(self.config, self.oshandler)
         logging.debug('config [%s]', '{}'.format(self.config))
 
+    def addRevisionToGit(self: object, gitPath: str, svnPath: str, commitmsg: str) -> bool:
+        return True
+
     def process(self: object) -> bool:
         if False == self.oshandler.workspaceFolderCreate(''):
             return False
 
         if False == self.githandler.initProjectRepository():
             return False
+
+        pathGitRepository: str = self.githandler.getRepositoryPath()
+
+        maxRevision: int = self.svnhandler.getMaxRevisionNumber()
+        logging.info('Max revision of [%s] is [%s]', '{}'.format(self.svnhandler.getRepositoryUrl()), '{}'.format(maxRevision))
+
+        for currentRevision in range(1, (maxRevision+1)):
+            logging.info('Working on revision [%s/%s]', '{}'.format(currentRevision), '{}'.format(maxRevision))
+            pathSvnRevision: str = self.svnhandler.checkoutRevision(currentRevision)
+            commitMessage: str = self.svnhandler.getCommitMessage(pathSvnRevision, currentRevision)
+            if not self.addRevisionToGit(pathGitRepository, pathSvnRevision, commitMessage):
+                logging.info('Cannot add revision [%s] to git repository', '{}'.format(currentRevision))
+                return False
 
         return True

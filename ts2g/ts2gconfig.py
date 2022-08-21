@@ -31,6 +31,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../ve
 
 from MDO import MDO
 
+
 class TS2GConfig(MDO):
     '''
     Contains dynamic settings of TS2G
@@ -42,6 +43,6 @@ class TS2GConfig(MDO):
         self.add('LOGGING', 'loglevel', 'info')
         self.add('LOGGING', 'logstring', '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s')
         self.add('SVN', 'password', '<enter password here>')
-        self.add('SVN', 'repository', '<enter svn url here>')
+        self.add('SVN', 'repositoryurl', '<enter svn url here>')
         self.add('SVN', 'user', '<enter user here>')
         self.add('TS2G', 'workspace', './workspace')

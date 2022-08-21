@@ -10,6 +10,13 @@ This project is licensed under the [MIT License][MIT].
 
 There are a lot of scripts and tools to convert a [Subversion][SVN] repository to a [git][GIT] repository. But usually they need at least manual steps. This script aims to do all of the steps automated.
 
+## Prerequisites
+
+You need to have [git][GIT] and [Subversion][SVN] installed and located in the path. Use the following links:
+
+* For [git][GIT]: <https://git-scm.com/downloads> - Just download, accept the defaults and install.
+* For [Subversion][SVN]: <https://tortoisesvn.net/downloads.de.html> - Download, start the setup and enable at least the option `command line client tools`.
+
 ## How it works
 
 In the config file there are some required settings. The first setting is the source of the [Subversion][SVN] - the name, the url and the credentials to the repository. The second setting is the destination - the name of the [git][GIT] repository.
