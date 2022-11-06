@@ -1,4 +1,4 @@
-'''
+"""
 ******************************************************************************
 Copyright 2020 ThirtySomething
 ******************************************************************************
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-'''
+"""
 
 import logging
 import os
@@ -31,29 +31,30 @@ from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2ggit import TS2GGIT
 from ts2g.ts2gos import TS2GOS
 from ts2g.ts2gsvn import TS2GSVN
+from ts2g.ts2gsvninfo import TS2GSVNinfo
 
 
 class TS2G:
-    '''
+    """
     Class to control the process of the repository transformation
-    '''
+    """
 
     def __init__(self: object, config: TS2GConfig) -> None:
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = TS2GOS(self.config.ts2g_workspace)
         self.githandler: TS2GGIT = TS2GGIT(self.config, self.oshandler)
         self.svnhandler: TS2GSVN = TS2GSVN(self.config, self.oshandler)
-        logging.debug('config [%s]', '{}'.format(self.config))
+        logging.debug("config [%s]", "{}".format(self.config))
 
-    def addRevisionToGit(self: object, repoNameGit: str, repoNameSvn: str, commitmsg: str):
+    def addRevisionToGit(self: object, repoNameGit: str, repoNameSvn: str, commitInfo: TS2GSVNinfo):
         # 1. Delete .svn folder
-        deletionFolder: str = os.path.join(repoNameSvn, '.svn')
+        deletionFolder: str = os.path.join(repoNameSvn, ".svn")
         self.oshandler.workspaceFolderDelete(deletionFolder)
 
-        # 2. Copy .git folder
-        foldersrc: str = os.path.join(repoNameGit, '.git')
-        folderdst: str = os.path.join(repoNameSvn, '.git')
-        self.oshandler.workspaceFolderCopy(foldersrc, folderdst)
+        # 2. Move .git folder
+        foldersrc: str = os.path.join(repoNameGit, ".git")
+        folderdst: str = os.path.join(repoNameSvn, ".git")
+        self.oshandler.workspaceFolderRename(foldersrc, folderdst)
 
         # 3. Delete git project
         self.oshandler.workspaceFolderDelete(repoNameGit)
@@ -62,24 +63,24 @@ class TS2G:
         self.oshandler.workspaceFolderRename(repoNameSvn, repoNameGit)
 
         # 5. Do git add . and git commit -m message
-        self.githandler.getRepositoryAdd(commitmsg)
+        self.githandler.gitRepositoryAdd(commitInfo)
 
     def process(self: object) -> bool:
-        if False == self.oshandler.workspaceFolderCreate(''):
+        if False == self.oshandler.workspaceFolderCreate(""):
             return False
 
         if False == self.githandler.initProjectRepository():
             return False
 
-        repoNameGit: str = self.githandler.getRepositoryName()
+        repoNameGit: str = self.githandler.gitRepositoryName()
 
         maxRevision: int = self.svnhandler.getMaxRevisionNumber()
-        logging.info('Max revision of [%s] is [%s]', '{}'.format(self.svnhandler.getRepositoryUrl()), '{}'.format(maxRevision))
+        logging.info("Max revision of [%s] is [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision))
 
-        for revisionNumber in range(1, (maxRevision+1)):
-            logging.info('Working on revision [%s/%s]', '{}'.format(revisionNumber), '{}'.format(maxRevision))
+        for revisionNumber in range(1, (maxRevision + 1)):
+            logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
             repoNameSvn: str = self.svnhandler.checkoutRevision(revisionNumber)
-            commitMessage: str = self.svnhandler.getCommitMessage(repoNameSvn, revisionNumber)
-            self.addRevisionToGit(repoNameGit, repoNameSvn, commitMessage)
+            commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
+            self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
 
         return True

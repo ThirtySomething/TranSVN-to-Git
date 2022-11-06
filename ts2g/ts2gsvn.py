@@ -1,4 +1,4 @@
-'''
+"""
 ******************************************************************************
 Copyright 2020 ThirtySomething
 ******************************************************************************
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-'''
+"""
 
 import logging
 import subprocess
@@ -31,59 +31,67 @@ import xml.etree.ElementTree as ET
 
 import svn.local
 import svn.remote
+from dateutil import parser
 
 from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2gos import TS2GOS
+from ts2g.ts2gsvninfo import TS2GSVNinfo
 
 
 class TS2GSVN:
-    '''
+    """
     Class to control the Subversion operations
-    '''
+    """
 
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
         self.repositoryurl: str = self.config.svn_repositoryurl
         self.repositoryname: str = self.__determineRepositoryName__()
-        logging.debug('repositoryurl [%s]', '{}'.format(self.repositoryurl))
-        logging.debug('repositoryname [%s]', '{}'.format(self.repositoryname))
+        logging.debug("repositoryurl [%s]", "{}".format(self.repositoryurl))
+        logging.debug("repositoryname [%s]", "{}".format(self.repositoryname))
 
     def __determineRepositoryName__(self: object) -> str:
-        url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip('/'))
-        path_parts = url_parts[2].rpartition('/')
+        url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip("/"))
+        path_parts = url_parts[2].rpartition("/")
         return path_parts[2]
+
+    def checkoutRevision(self: object, revision: int) -> str:
+        revisionName: str = "svn_" + self.repositoryname + "_" + str(revision)
+        pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
+        logging.info("Checkout revision [%s] to [%s]", "{}".format(revision), "{}".format(pathCheckout))
+        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
+        reopClient.checkout(pathCheckout, revision)
+        return revisionName
+
+    def getCommitInfo(self: object, checkout: str, revision: int) -> TS2GSVNinfo:
+        info: TS2GSVNinfo = TS2GSVNinfo()
+        try:
+            pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
+            cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} log -r{}:{} --xml {}".format(self.config.svn_user, self.config.svn_password, revision, revision, pathCheckout)
+            cmdArgs: [] = cmdString.split()
+            proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
+            output = proc.stdout.read()
+            svnXml: str = output.decode("ascii")
+            root = ET.fromstring(svnXml)
+            for element in root.findall("logentry"):
+                info.commitmsg = element.find("msg").text
+                info.author = element.find("author").text
+                info.date = parser.parse(element.find("date").text)
+                info.revision = revision
+            logging.info(info)
+        except Exception as ex:
+            logging.error("Exception [%s]", "{}".format(ex))
+        return info
 
     def getMaxRevisionNumber(self: object) -> int:
         reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
         repoInfo = reopClient.info()
-        revision: int = repoInfo['entry_revision']
+        revision: int = repoInfo["entry_revision"]
         return revision
+
+    def gitRepositoryName(self: object) -> str:
+        return self.repositoryname
 
     def getRepositoryUrl(self: object) -> str:
         return self.repositoryurl
-
-    def getRepositoryName(self: object) -> str:
-        return self.repositoryname
-
-    def getCommitMessage(self: object, checkout: str, revision: int) -> str:
-        message: str = ''
-        try:
-            pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
-            proc = subprocess.Popen(['svn', '--non-interactive', 'log', '-r', str(revision) + ':' + str(revision), '--xml', pathCheckout], stdout=subprocess.PIPE)
-            output = proc.stdout.read()
-            svnXml: str = output.decode('ascii')
-            root = ET.fromstring(svnXml)
-            for element in root.findall('logentry'):
-                message: str = element.find('msg').text
-        except Exception as ex:
-            logging.error('Exception [%s]', '{}'.format(ex))
-        return message
-
-    def checkoutRevision(self: object, revision: int) -> str:
-        revisionName: str = 'svn_' + self.repositoryname + '_' + str(revision)
-        pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
-        logging.info('Checkout revision [%s] to [%s]', '{}'.format(revision), '{}'.format(pathCheckout))
-        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
-        reopClient.checkout(pathCheckout, revision)
-        return revisionName

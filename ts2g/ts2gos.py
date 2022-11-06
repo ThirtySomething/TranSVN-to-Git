@@ -1,4 +1,4 @@
-'''
+"""
 ******************************************************************************
 Copyright 2020 ThirtySomething
 ******************************************************************************
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-'''
+"""
 
 import logging
 import os
@@ -51,13 +51,13 @@ def onerror(func, path, exc_info):
 
 
 class TS2GOS:
-    '''
-    Class to control the process of the repository transformation
-    '''
+    """
+    Class to control OS operations
+    """
 
     def __init__(self, workspace: str) -> None:
         self.workspaceBase: str = self.__determineWorkspaceBase__(workspace)
-        logging.info('workspaceBase [%s]', '{}'.format(self.workspaceBase))
+        logging.info("workspaceBase [%s]", "{}".format(self.workspaceBase))
 
     def __determineWorkspaceBase__(self: object, foldername: str) -> str:
         scriptpath: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,44 +67,44 @@ class TS2GOS:
     def workspaceBaseGet(self: object) -> str:
         return self.workspaceBase
 
+    def workspaceFolderCopy(self: object, foldersrc: str, folderdst: str):
+        src: str = self.workspaceFolderGet(foldersrc)
+        dst: str = self.workspaceFolderGet(folderdst)
+        logging.debug("Copy [%s] to [%s]", "{}".format(src), "{}".format(dst))
+        shutil.copytree(src, dst)
+
     def workspaceFolderCreate(self: object, folder: str) -> bool:
         workspaceFolder: str = self.workspaceFolderGet(folder)
         if not self.workspaceFolderExists(workspaceFolder):
             try:
-                logging.info('Create workspace folder [%s]', '{}'.format(workspaceFolder))
+                logging.info("Create workspace folder [%s]", "{}".format(workspaceFolder))
                 os.makedirs(workspaceFolder)
             except OSError as error:
-                logging.error('Cannot create workspace folder [%s]', '{}'.format(workspaceFolder))
+                logging.error("Cannot create workspace folder [%s]", "{}".format(workspaceFolder))
         rValue = self.workspaceFolderExists(workspaceFolder)
         return rValue
 
+    def workspaceFolderDelete(self: object, folder: str) -> None:
+        try:
+            folder2Delete: str = self.workspaceFolderGet(folder)
+            logging.debug("folder2Delete [%s]", "{}".format(folder2Delete))
+            # Trick used with the onerror, see also
+            # https://stackoverflow.com/questions/2656322/shutil-rmtree-fails-on-windows-with-access-is-denied
+            shutil.rmtree(folder2Delete, ignore_errors=False, onerror=onerror)
+        except Exception as ex:
+            logging.error("Exception [%s]", "{}".format(ex))
+
     def workspaceFolderExists(self: object, folder: str) -> bool:
         workspaceFolder: str = self.workspaceFolderGet(folder)
-        result: bool = (os.path.exists(workspaceFolder) and os.path.isdir(workspaceFolder))
+        result: bool = os.path.exists(workspaceFolder) and os.path.isdir(workspaceFolder)
         return result
 
     def workspaceFolderGet(self: object, folder: str) -> str:
         workspaceFolder = os.path.join(self.workspaceBase, folder)
         return workspaceFolder
 
-    def workspaceFolderDelete(self: object, folder: str) -> None:
-        try:
-            folder2Delete: str = self.workspaceFolderGet(folder)
-            logging.debug('folder2Delete [%s]', '{}'.format(folder2Delete))
-            # Trick used with the onerror, see also
-            # https://stackoverflow.com/questions/2656322/shutil-rmtree-fails-on-windows-with-access-is-denied
-            shutil.rmtree(folder2Delete, ignore_errors=False, onerror=onerror)
-        except Exception as ex:
-            logging.error('Exception [%s]', '{}'.format(ex))
-
-    def workspaceFolderCopy(self: object, foldersrc: str, folderdst: str):
-        src: str = self.workspaceFolderGet(foldersrc)
-        dst: str = self.workspaceFolderGet(folderdst)
-        logging.debug('Copy [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
-        shutil.copytree(src, dst)
-
     def workspaceFolderRename(self: object, foldersrc: str, folderdst: str):
         src: str = self.workspaceFolderGet(foldersrc)
         dst: str = self.workspaceFolderGet(folderdst)
-        logging.debug('Rename [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
-        os.rename(src, dst)
+        logging.debug("Rename [%s] to [%s]", "{}".format(src), "{}".format(dst))
+        shutil.move(src, dst)

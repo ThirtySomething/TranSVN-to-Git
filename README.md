@@ -42,6 +42,20 @@ You can find the homepage of the projects here:
 * [svn][LIBSVN]
 * [pysvn][PYSVN]
 
+## SVN authors
+
+To get a list of the SVN authors for a mapping, you might want to use this statement:
+
+```bash
+svn log -q --no-auth-cache --username <USER> --password <PASSWORD> <REPOSITORY URL> | grep -i '(' | cut -d '|' -f 2 | sort -u > users.txt
+```
+
+Then you have to update/extend the file to match the following format:
+
+```bash
+<SVN-USERNAME> = Firstname Lastname <email@example.com>
+```
+
 [GIT]: https://git-scm.com/
 [MIT]: https://opensource.org/licenses/MIT
 [SVN]: https://subversion.apache.org/
