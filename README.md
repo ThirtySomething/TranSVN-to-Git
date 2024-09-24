@@ -30,7 +30,7 @@ The programm will create in a working folder an empty [git][GIT] repository. The
 
 Because of this the whole process is very time consuming. But hey - still start the script and start/continue with other task ;-)
 
-Maybe there is a misunderstanding of how [git][GIT] works. The expected result is a [git][GIT] repository in the shape of your [SVN][SVN] repository including almost the whole history.<sup>1)</sup> If some [SVN externals][SVN_EXTERNAL] used, the must be replaced manually as [git submodules][GIT_SUBMODULE]. Additional all special [SVN][SVN] attributes needs to be revised if there is a equivalent for [git][GIT] repository - they need also to be set manually.
+Maybe there is a misunderstanding of how [git][GIT] works. The expected result is a [git][GIT] repository in the shape of your [SVN][SVN] repository including almost the whole history.<sup>1)</sup> If some [SVN externals][SVN_EXTERNAL] are used, they must be replaced manually as [git submodules][GIT_SUBMODULE]. Additional all special [SVN][SVN] attributes needs to be revised if there is a equivalent for [git][GIT] repository - they need also to be set manually.
 
 <sup>1)</sup> The reason for almost the whole history is that you cannot add empty folders to a [git][GIT] repository without dirty hacks. So if there are empty folders committed to your [SVN][SVN] repository, the same commit cannot be done on a [git][GIT] repository.
 
