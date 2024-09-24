@@ -32,14 +32,31 @@ class TS2GSVNinfo:
     Data object
     """
 
-    author: str = ""
-    commitmsg: str = ""
-    date: datetime = ""
-    revision: int = 0
+    def __init__(self: object, author: str, commitmsg: str, date: datetime, revision: int) -> None:
+        self._author: str = author
+        self._commitmsg: str = commitmsg
+        self._date: datetime = date
+        self._revision: int = revision
 
     def __str__(self) -> str:
-        measstr: str = "author [{}], commitmsg [{}], date [{}], revision [{}]".format(self.author, self.commitmsg, self.date, self.revision)
+        measstr: str = "author [{}], commitmsg [{}], date [{}], revision [{}]".format(self._author, self._commitmsg, self._date, self._revision)
         return measstr
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    @property
+    def author(self: object) -> str:
+        return self._author
+
+    @property
+    def commitmsg(self: object) -> str:
+        return self._commitmsg
+
+    @property
+    def date(self: object) -> datetime:
+        return self._date
+
+    @property
+    def revision(self: object) -> int:
+        return self._revision

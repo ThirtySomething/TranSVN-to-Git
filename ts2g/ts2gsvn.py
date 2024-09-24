@@ -69,7 +69,6 @@ class TS2GSVN:
         return revisionName
 
     def getCommitInfo(self: object, checkout: str, revision: int) -> TS2GSVNinfo:
-        info: TS2GSVNinfo = TS2GSVNinfo()
         try:
             pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
             cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} log -r{}:{} --xml {}".format(
@@ -81,14 +80,24 @@ class TS2GSVN:
             svnXml: str = output.decode("utf-8")
             root = ET.fromstring(svnXml)
             for element in root.findall("logentry"):
-                info.commitmsg = element.find("msg").text
-                info.author = element.find("author").text
-                info.date = parser.parse(element.find("date").text)
-                info.revision = revision
+                info: TS2GSVNinfo = TS2GSVNinfo(element.find("author").text, element.find("msg").text, parser.parse(element.find("date").text), revision)
             logging.info(info)
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
         return info
+
+    def svnUpdateToRevision(self: object, checkout: str, revision: int) -> None:
+        try:
+            pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
+            cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} update -r{} {}".format(
+                self.config.value_get("SVN", "user"), self.config.value_get("SVN", "password"), revision, pathCheckout
+            )
+            cmdArgs: [] = cmdString.split()
+            proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
+            output = proc.stdout.read()
+            svnXml: str = output.decode("utf-8")
+        except Exception as ex:
+            logging.error("Exception [%s]", "{}".format(ex))
 
     def getMaxRevisionNumber(self: object) -> int:
         reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.value_get("SVN", "user"), password=self.config.value_get("SVN", "password"))

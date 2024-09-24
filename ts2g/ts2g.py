@@ -60,7 +60,7 @@ class TS2G:
         self.githandler.gitRepositoryAdd(commitInfo)
 
         # Delete .svn folder
-        self.oshandler.workspaceFolderDelete(folder_src)
+        # self.oshandler.workspaceFolderDelete(folder_src)
 
     def process(self: object) -> bool:
         if False == self.oshandler.workspaceFolderCreate(""):
@@ -74,9 +74,13 @@ class TS2G:
         maxRevision: int = self.svnhandler.getMaxRevisionNumber()
         logging.info("Max revision of [%s] is [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision))
 
+        repoNameSvn: str = ""
         for revisionNumber in range(1, (maxRevision + 1)):
             logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
-            repoNameSvn: str = self.svnhandler.checkoutRevision(revisionNumber)
+            if 1 == revisionNumber:
+                repoNameSvn = self.svnhandler.checkoutRevision(revisionNumber)
+            else:
+                self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
             commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
             self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
             # break
