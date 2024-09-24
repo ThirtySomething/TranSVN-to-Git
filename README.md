@@ -53,10 +53,6 @@ To get a list of the SVN authors for a mapping, you might want to use this state
 svn log -q --no-auth-cache --username <USER> --password <PASSWORD> <REPOSITORY URL> | grep -i '(' | cut -d '|' -f 2 | sort -u > users.txt
 ```
 
-```bash
-svn log -q --no-auth-cache --username paul --password "z#6_L|a]'KtX\\#W=" http://subvwbn.mosca-ag.com/scm/repo/svn/MK3/ | grep -i '(' | cut -d '|' -f 2 | sort -u > users.txt
-```
-
 Then you have to update/extend the file to match the following format:
 
 ```bash
