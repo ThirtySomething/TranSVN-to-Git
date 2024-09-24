@@ -1,7 +1,6 @@
-autopep8==2.3.1
-black==24.8.0
 click==8.1.7
 colorama==0.4.6
+dirsync==2.2.5
 gitdb==4.0.11
 GitPython==3.1.43
 mypy-extensions==1.0.0

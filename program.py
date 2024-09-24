@@ -35,14 +35,14 @@ TS2G_CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(TS2G_CONFIG.logging_loglevel.upper())
-LOGGER_HANDLER = logging.FileHandler(TS2G_CONFIG.logging_logfile, "w", "utf-8")
-LOGGER_HANDLER.setFormatter(logging.Formatter(TS2G_CONFIG.logging_logstring))
+LOGGER_SETUP.setLevel(TS2G_CONFIG.value_get("LOGGING", "loglevel").upper())
+LOGGER_HANDLER = logging.FileHandler(TS2G_CONFIG.value_get("LOGGING", "logfile"), "w", "utf-8")
+LOGGER_HANDLER.setFormatter(logging.Formatter(TS2G_CONFIG.value_get("LOGGING", "logstring")))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to convert a Subversion repository to a git repository
 if __name__ == "__main__":
-    logging.info("debugFlag is set to [%s]", "{}".format(TS2G_CONFIG.logging_loglevel.upper()))
+    logging.info("debugFlag is set to [%s]", "{}".format(TS2G_CONFIG.value_get("LOGGING", "loglevel").upper()))
     converter = TS2G(TS2G_CONFIG)
     status = converter.process()
     logging.info("process result is [%s]", "{}".format(status))

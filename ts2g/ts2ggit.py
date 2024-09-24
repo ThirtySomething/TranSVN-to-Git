@@ -29,6 +29,7 @@ import logging
 import os
 
 import git
+import git.util
 
 from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2gos import TS2GOS
@@ -45,45 +46,48 @@ class TS2GGIT:
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
-        self.projectFolder: str = self.oshandler.workspaceFolderGet(self.config.git_project)
+        self.projectFolder: str = self.oshandler.workspaceFolderGet(self.config.value_get("GIT", "project"))
         logging.debug("projectFolder [%s]", "{}".format(self.projectFolder))
+
+    def getActor(self: object, name: str) -> git.Actor:
+        rval: git.Actor = git.Actor(name=name, email="")
+        usermap: list[str] = self.config.value_get("SVN", "usermap")
+        for curuser in usermap:
+            if curuser.startswith(name):
+                logging.debug("found user [%s]", "{}".format(curuser))
+                parts = curuser.split("=")
+                rval = git.Actor(name=parts[0].strip(), email=parts[1].strip())
+                break
+        return rval
 
     def gitRepositoryAdd(self: object, commitInfo: TS2GSVNinfo):
         try:
             projectFolder: str = self.gitRepositoryPath()
             projectRepo = git.Repo(projectFolder)
-            files_to_add = []
-            logging.info("Collecting files in folder [{}]".format(projectFolder))
-            for filename in glob.iglob(projectFolder + "**/**", recursive=True):
-                fname: str = str(filename)
-                if os.path.isdir(fname):
-                    # Skip directories
-                    continue
-                gitFile: str = fname.replace(projectFolder, "")
-                if gitFile.startswith("\.git"):
-                    # Skip everything of special git folder
-                    continue
-                files_to_add.append(gitFile)
-            logging.info("Adding [{}] files to repo".format(len(files_to_add)))
-            projectRepo.index.add(files_to_add)
+            logging.info("Add changes to repository")
+            projectRepo.git.add(all=True)
             logging.info("Perform git commit")
-            projectRepo.index.commit(commitInfo.commitmsg, author_date=commitInfo.date, commit_date=commitInfo.date)
+            commitmsg: str = commitInfo.commitmsg
+            if not commitmsg:
+                commitmsg = ""
+            actor: git.Actor = self.getActor(commitInfo.author)
+            projectRepo.index.commit(message=commitmsg, author=actor, committer=actor, author_date=commitInfo.date, commit_date=commitInfo.date)
             logging.info("Git commit done")
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
 
     def gitRepositoryName(self: object) -> str:
-        return self.config.git_project
+        return self.config.value_get("GIT", "project")
 
     def gitRepositoryPath(self: object) -> str:
         return os.path.join(self.projectFolder, "")
 
     def initProjectRepository(self: object) -> bool:
         if self.oshandler.workspaceFolderExists(self.projectFolder):
-            logging.error("Git project [%s] already exists in workspace [%s]", "{}".format(self.config.git_project), "{}".format(self.oshandler.workspaceBaseGet()))
+            logging.error("Git project [%s] already exists in workspace [%s]", "{}".format(self.config.value_get("GIT", "project")), "{}".format(self.oshandler.workspaceBaseGet()))
             return False
 
-        if not self.oshandler.workspaceFolderCreate(self.config.git_project):
+        if not self.oshandler.workspaceFolderCreate(self.config.value_get("GIT", "project")):
             return False
 
         projectFolder: str = self.gitRepositoryPath()

@@ -29,7 +29,7 @@ PATH_ENVIRONMENT="${PATH_BASE}/${ENV_NAME}"
 if [[ ! -d "${PATH_ENVIRONMENT}" ]]; then
     # Create environment
     echo "Create missing environment [${ENV_NAME}]"
-    python -m venv ${ENV_NAME}
+    python3 -m venv ${ENV_NAME}
 
     # Activate environment
     if [[ -z "${VIRTUAL_ENV}" ]]; then
@@ -67,7 +67,7 @@ fi
 ################################################################################
 if [[ -f ${SCRIPT} ]]; then
     echo "Execute script [${SCRIPT}]"
-    python ${SCRIPT}
+    python3 ${SCRIPT}
 else
     echo "Script [${SCRIPT}] not found :-("
 fi

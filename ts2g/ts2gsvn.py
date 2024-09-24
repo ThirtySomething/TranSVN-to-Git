@@ -46,7 +46,7 @@ class TS2GSVN:
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
-        self.repositoryurl: str = self.config.svn_repositoryurl
+        self.repositoryurl: str = self.config.value_get("SVN", "repositoryurl")
         self.repositoryname: str = self.__determineRepositoryName__()
         logging.debug("repositoryurl [%s]", "{}".format(self.repositoryurl))
         logging.debug("repositoryname [%s]", "{}".format(self.repositoryname))
@@ -60,7 +60,11 @@ class TS2GSVN:
         revisionName: str = "svn_" + self.repositoryname + "_" + str(revision)
         pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
         logging.info("Checkout revision [%s] to [%s]", "{}".format(revision), "{}".format(pathCheckout))
-        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
+        reopClient = svn.remote.RemoteClient(
+            self.repositoryurl,
+            username=self.config.value_get("SVN", "user"),
+            password=self.config.value_get("SVN", "password"),
+        )
         reopClient.checkout(pathCheckout, revision)
         return revisionName
 
@@ -68,11 +72,13 @@ class TS2GSVN:
         info: TS2GSVNinfo = TS2GSVNinfo()
         try:
             pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
-            cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} log -r{}:{} --xml {}".format(self.config.svn_user, self.config.svn_password, revision, revision, pathCheckout)
+            cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} log -r{}:{} --xml {}".format(
+                self.config.value_get("SVN", "user"), self.config.value_get("SVN", "password"), revision, revision, pathCheckout
+            )
             cmdArgs: [] = cmdString.split()
             proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
             output = proc.stdout.read()
-            svnXml: str = output.decode("ascii")
+            svnXml: str = output.decode("utf-8")
             root = ET.fromstring(svnXml)
             for element in root.findall("logentry"):
                 info.commitmsg = element.find("msg").text
@@ -85,7 +91,7 @@ class TS2GSVN:
         return info
 
     def getMaxRevisionNumber(self: object) -> int:
-        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.svn_user, password=self.config.svn_password)
+        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.value_get("SVN", "user"), password=self.config.value_get("SVN", "password"))
         repoInfo = reopClient.info()
         revision: int = repoInfo["entry_revision"]
         return revision

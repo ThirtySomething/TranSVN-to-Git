@@ -45,4 +45,5 @@ class TS2GConfig(MDO):
         self.add("SVN", "password", "<enter password here>")
         self.add("SVN", "repositoryurl", "<enter svn url here>")
         self.add("SVN", "user", "<enter user here>")
+        self.add("SVN", "usermap", ["username = email"])
         self.add("TS2G", "workspace", "./workspace")

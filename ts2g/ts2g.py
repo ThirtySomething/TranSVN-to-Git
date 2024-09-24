@@ -27,6 +27,8 @@ SOFTWARE.
 import logging
 import os
 
+import dirsync
+
 from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2ggit import TS2GGIT
 from ts2g.ts2gos import TS2GOS
@@ -41,29 +43,24 @@ class TS2G:
 
     def __init__(self: object, config: TS2GConfig) -> None:
         self.config: TS2GConfig = config
-        self.oshandler: TS2GOS = TS2GOS(self.config.ts2g_workspace)
+        self.oshandler: TS2GOS = TS2GOS(self.config.value_get("TS2G", "workspace"))
         self.githandler: TS2GGIT = TS2GGIT(self.config, self.oshandler)
         self.svnhandler: TS2GSVN = TS2GSVN(self.config, self.oshandler)
-        logging.debug("config [%s]", "{}".format(self.config))
+        logging.debug("config [%s]", self.config)
 
     def addRevisionToGit(self: object, repoNameGit: str, repoNameSvn: str, commitInfo: TS2GSVNinfo):
-        # 1. Delete .svn folder
-        deletionFolder: str = os.path.join(repoNameSvn, ".svn")
-        self.oshandler.workspaceFolderDelete(deletionFolder)
+        # Create source and destination names for sync
+        folder_src: str = self.oshandler.workspaceFolderGet(repoNameSvn)
+        folder_dst: str = self.oshandler.workspaceFolderGet(repoNameGit)
 
-        # 2. Move .git folder
-        foldersrc: str = os.path.join(repoNameGit, ".git")
-        folderdst: str = os.path.join(repoNameSvn, ".git")
-        self.oshandler.workspaceFolderRename(foldersrc, folderdst)
+        # Sync folders
+        dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[".git", ".svn"])
 
-        # 3. Delete git project
-        self.oshandler.workspaceFolderDelete(repoNameGit)
-
-        # 4. Rename to git project
-        self.oshandler.workspaceFolderRename(repoNameSvn, repoNameGit)
-
-        # 5. Do git add . and git commit -m message
+        # Do git add . and git commit -m message
         self.githandler.gitRepositoryAdd(commitInfo)
+
+        # Delete .svn folder
+        self.oshandler.workspaceFolderDelete(folder_src)
 
     def process(self: object) -> bool:
         if False == self.oshandler.workspaceFolderCreate(""):
@@ -82,5 +79,6 @@ class TS2G:
             repoNameSvn: str = self.svnhandler.checkoutRevision(revisionNumber)
             commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
             self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
+            # break
 
         return True
