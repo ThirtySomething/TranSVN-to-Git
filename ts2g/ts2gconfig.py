@@ -37,7 +37,8 @@ class TS2GConfig(MDO):
     Contains dynamic settings of TS2G
     """
 
-    def setup(self: object) -> bool:
+    def setup(self: object) -> None:
+        """Config options used for transforming SVN repo into GIT repo."""
         self.add("GIT", "commit_msg_svn_nr", "yes")
         self.add("GIT", "project", "<enter project name here>")
         self.add("LOGGING", "logfile", "program.log")

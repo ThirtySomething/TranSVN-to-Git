@@ -42,6 +42,11 @@ class TS2G:
     """
 
     def __init__(self: object, config: TS2GConfig) -> None:
+        """Default constructor
+
+        Args:
+            config (TS2GConfig): Config settings
+        """
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = TS2GOS(self.config.value_get("TS2G", "workspace"))
         self.githandler: TS2GGIT = TS2GGIT(self.config, self.oshandler)
@@ -49,6 +54,13 @@ class TS2G:
         logging.debug("config [%s]", self.config)
 
     def addRevisionToGit(self: object, repoNameGit: str, repoNameSvn: str, commitInfo: TS2GSVNinfo):
+        """Sync SVN directory to GIT directory, do a "git add . && git commit -m "..." " on GIT directory
+
+        Args:
+            repoNameGit (str): Folder name of GIT destination directory
+            repoNameSvn (str): Folder name of SVN source directory
+            commitInfo (TS2GSVNinfo): SVN Commit info object
+        """
         # Create source and destination names for sync
         folder_src: str = self.oshandler.workspaceFolderGet(repoNameSvn)
         folder_dst: str = self.oshandler.workspaceFolderGet(repoNameGit)
@@ -60,6 +72,11 @@ class TS2G:
         self.githandler.gitRepositoryAdd(commitInfo)
 
     def process(self: object) -> bool:
+        """Initialize and start conversion process
+
+        Returns:
+            bool: False on any failure, otherwise true
+        """
         if False == self.oshandler.workspaceFolderCreate(""):
             return False
 

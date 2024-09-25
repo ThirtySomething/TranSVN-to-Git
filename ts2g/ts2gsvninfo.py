@@ -29,34 +29,72 @@ import datetime
 
 class TS2GSVNinfo:
     """
-    Data object
+    Data object containing information about SVN commit/revision
     """
 
     def __init__(self: object, author: str, commitmsg: str, date: datetime, revision: int) -> None:
+        """Default constructor
+
+        Args:
+            author (str): Name of SVN committer
+            commitmsg (str): SVN commit message
+            date (datetime): Date of SVN commit
+            revision (int): SVN revision number
+        """
         self._author: str = author
         self._commitmsg: str = commitmsg
         self._date: datetime = date
         self._revision: int = revision
 
     def __str__(self) -> str:
+        """String representation of SVN commit
+
+        Returns:
+            str: SVN commit as string
+        """
         measstr: str = "author [{}], commitmsg [{}], date [{}], revision [{}]".format(self._author, self._commitmsg, self._date, self._revision)
         return measstr
 
     def __repr__(self) -> str:
+        """String representation of SVN commit
+
+        Returns:
+            str: SVN commit as string
+        """
         return self.__str__()
 
     @property
     def author(self: object) -> str:
+        """Access to author
+
+        Returns:
+            str: SVN committer
+        """
         return self._author
 
     @property
     def commitmsg(self: object) -> str:
+        """Access to commit message
+
+        Returns:
+            str: SVN commit message
+        """
         return self._commitmsg
 
     @property
     def date(self: object) -> datetime:
+        """Access to date
+
+        Returns:
+            str: SVN commit date
+        """
         return self._date
 
     @property
     def revision(self: object) -> int:
+        """Access to revision
+
+        Returns:
+            str: SVN commit revision
+        """
         return self._revision

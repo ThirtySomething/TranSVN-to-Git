@@ -45,15 +45,26 @@ class TS2GSVN:
     """
 
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
+        """Default constructor
+
+        Args:
+            config (TS2GConfig): Config options
+            oshandler (TS2GOS): Encapsulated os functions
+        """
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
         self.repositoryurl: str = self.config.value_get("SVN", "repositoryurl")
         self.repositoryname: str = self.__determineRepositoryName__()
-        self.prefixmsg: bool = self.__determinePrefixFlag()
+        self.prefixmsg: bool = self.__determinePrefixFlag__()
         logging.debug("repositoryurl [%s]", "{}".format(self.repositoryurl))
         logging.debug("repositoryname [%s]", "{}".format(self.repositoryname))
 
-    def __determinePrefixFlag(self: object) -> bool:
+    def __determinePrefixFlag__(self: object) -> bool:
+        """Determine if prefix for commit messages should be used or not
+
+        Returns:
+            bool: True if prefix has to be used, otherwise False
+        """
         flag: bool = False
         flag_raw: str = self.config.value_get("GIT", "commit_msg_svn_nr").lower()
 
@@ -63,12 +74,25 @@ class TS2GSVN:
         return flag
 
     def __determineRepositoryName__(self: object) -> str:
+        """Strip repository name from URL
+
+        Returns:
+            str: Name of repository
+        """
         url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip("/"))
         path_parts = url_parts[2].rpartition("/")
         return path_parts[2]
 
     def checkoutRevision(self: object, revision: int) -> str:
-        revisionName: str = "svn_" + self.repositoryname + "_" + str(revision)
+        """Checkout specific SVN revision
+
+        Args:
+            revision (int): SVN revision to checkout
+
+        Returns:
+            str: Name of checkout folder
+        """
+        revisionName: str = "svn_" + self.repositoryname
         pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
         logging.info("Checkout revision [%s] to [%s]", "{}".format(revision), "{}".format(pathCheckout))
         reopClient = svn.remote.RemoteClient(
@@ -80,6 +104,15 @@ class TS2GSVN:
         return revisionName
 
     def getCommitInfo(self: object, checkout: str, revision: int) -> TS2GSVNinfo:
+        """Determine SVN commit information for given revision number
+
+        Args:
+            checkout (str): Name of SVN checkout folder
+            revision (int): Revision number to get info for
+
+        Returns:
+            TS2GSVNinfo: Object containing SVN commit info
+        """
         try:
             pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
             cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} log -r{}:{} --xml {}".format(
@@ -109,6 +142,12 @@ class TS2GSVN:
         return info
 
     def svnUpdateToRevision(self: object, checkout: str, revision: int) -> None:
+        """Update SVN checkout to given revision
+
+        Args:
+            checkout (str): Name of SVN checkout folder
+            revision (int): Revision to update to
+        """
         try:
             pathCheckout: str = self.oshandler.workspaceFolderGet(checkout)
             cmdString: str = "svn --non-interactive --no-auth-cache --username {} --password {} update -r{} {}".format(
@@ -122,13 +161,28 @@ class TS2GSVN:
             logging.error("Exception [%s]", "{}".format(ex))
 
     def getMaxRevisionNumber(self: object) -> int:
+        """Determine maximum number of revisions
+
+        Returns:
+            int: Maximum revision number of repository
+        """
         reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.value_get("SVN", "user"), password=self.config.value_get("SVN", "password"))
         repoInfo = reopClient.info()
         revision: int = repoInfo["entry_revision"]
         return revision
 
-    def gitRepositoryName(self: object) -> str:
+    def getRepositoryName(self: object) -> str:
+        """Get name of SVN repository
+
+        Returns:
+            str: Name of SVN repository
+        """
         return self.repositoryname
 
     def getRepositoryUrl(self: object) -> str:
+        """Get URL of SVN repository
+
+        Returns:
+            str: URL of SVN repository
+        """
         return self.repositoryurl

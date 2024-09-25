@@ -44,12 +44,26 @@ class TS2GGIT:
     """
 
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
+        """Default constructor
+
+        Args:
+            config (TS2GConfig): Config options
+            oshandler (TS2GOS): Encapsulated file system operations
+        """
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
         self.projectFolder: str = self.oshandler.workspaceFolderGet(self.config.value_get("GIT", "project"))
         logging.debug("projectFolder [%s]", "{}".format(self.projectFolder))
 
     def getActor(self: object, name: str) -> git.Actor:
+        """Create actor object used in git commit based on configured usermap
+
+        Args:
+            name (str): Name of SVN committer
+
+        Returns:
+            git.Actor: Object with username and email as configured
+        """
         rval: git.Actor = git.Actor(name=name, email="")
         usermap: list[str] = self.config.value_get("SVN", "usermap")
         for curuser in usermap:
@@ -61,6 +75,11 @@ class TS2GGIT:
         return rval
 
     def gitRepositoryAdd(self: object, commitInfo: TS2GSVNinfo):
+        """Perform git add . and a git commit
+
+        Args:
+            commitInfo (TS2GSVNinfo): Information about SVN commit like message, committer, revision
+        """
         try:
             projectFolder: str = self.gitRepositoryPath()
             projectRepo = git.Repo(projectFolder)
@@ -77,12 +96,27 @@ class TS2GGIT:
             logging.error("Exception [%s]", "{}".format(ex))
 
     def gitRepositoryName(self: object) -> str:
+        """Retrieve name of GIT destination repo from config options
+
+        Returns:
+            str: Plain name of GIT repo
+        """
         return self.config.value_get("GIT", "project")
 
     def gitRepositoryPath(self: object) -> str:
+        """Get full qualified path name (=> location) of GIT repo
+
+        Returns:
+            str: Full os path name of GIT repo
+        """
         return os.path.join(self.projectFolder, "")
 
     def initProjectRepository(self: object) -> bool:
+        """Create empty GIT repo
+
+        Returns:
+            bool: False on any failure, otherwise True
+        """
         if self.oshandler.workspaceFolderExists(self.projectFolder):
             logging.error("Git project [%s] already exists in workspace [%s]", "{}".format(self.config.value_get("GIT", "project")), "{}".format(self.oshandler.workspaceBaseGet()))
             return False
