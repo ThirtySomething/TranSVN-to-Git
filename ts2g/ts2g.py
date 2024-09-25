@@ -83,23 +83,27 @@ class TS2G:
         if False == self.githandler.initProjectRepository():
             return False
 
-        repoNameGit: str = self.githandler.gitRepositoryName()
+        try:
+            repoNameGit: str = self.githandler.gitRepositoryName()
 
-        maxRevision: int = self.svnhandler.getMaxRevisionNumber()
-        logging.info("Max revision of [%s] is [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision))
+            maxRevision: int = self.svnhandler.getMaxRevisionNumber()
+            logging.info("Max revision of [%s] is [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision))
 
-        repoNameSvn: str = ""
-        for revisionNumber in range(1, (maxRevision + 1)):
-            logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
-            if 1 == revisionNumber:
-                repoNameSvn = self.svnhandler.checkoutRevision(revisionNumber)
-            else:
-                self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
-            commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
-            self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
+            repoNameSvn: str = ""
+            for revisionNumber in range(1, (maxRevision + 1)):
+                logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
+                if 1 == revisionNumber:
+                    repoNameSvn = self.svnhandler.checkoutRevision(revisionNumber)
+                else:
+                    self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
+                commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
+                self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
 
-        # Delete svn folder
-        folder_svn: str = self.oshandler.workspaceFolderGet(repoNameSvn)
-        self.oshandler.workspaceFolderDelete(folder_svn)
+            # Delete svn folder
+            folder_svn: str = self.oshandler.workspaceFolderGet(repoNameSvn)
+            self.oshandler.workspaceFolderDelete(folder_svn)
+        except Exception as ex:
+            logging.error("Exception [%s]", "{}".format(ex))
+            return False
 
         return True
