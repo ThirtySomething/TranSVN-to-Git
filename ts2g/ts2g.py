@@ -59,9 +59,6 @@ class TS2G:
         # Do git add . and git commit -m message
         self.githandler.gitRepositoryAdd(commitInfo)
 
-        # Delete .svn folder
-        # self.oshandler.workspaceFolderDelete(folder_src)
-
     def process(self: object) -> bool:
         if False == self.oshandler.workspaceFolderCreate(""):
             return False
@@ -83,6 +80,9 @@ class TS2G:
                 self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
             commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
             self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
-            # break
+
+        # Delete svn folder
+        folder_svn: str = self.oshandler.workspaceFolderGet(repoNameSvn)
+        self.oshandler.workspaceFolderDelete(folder_svn)
 
         return True

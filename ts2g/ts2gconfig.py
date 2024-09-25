@@ -38,6 +38,7 @@ class TS2GConfig(MDO):
     """
 
     def setup(self: object) -> bool:
+        self.add("GIT", "commit_msg_svn_nr", "yes")
         self.add("GIT", "project", "<enter project name here>")
         self.add("LOGGING", "logfile", "program.log")
         self.add("LOGGING", "loglevel", "info")

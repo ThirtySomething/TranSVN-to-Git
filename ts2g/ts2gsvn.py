@@ -28,6 +28,7 @@ import logging
 import subprocess
 import urllib.parse
 import xml.etree.ElementTree as ET
+import datetime
 
 import svn.local
 import svn.remote
@@ -48,8 +49,18 @@ class TS2GSVN:
         self.oshandler: TS2GOS = oshandler
         self.repositoryurl: str = self.config.value_get("SVN", "repositoryurl")
         self.repositoryname: str = self.__determineRepositoryName__()
+        self.prefixmsg: bool = self.__determinePrefixFlag()
         logging.debug("repositoryurl [%s]", "{}".format(self.repositoryurl))
         logging.debug("repositoryname [%s]", "{}".format(self.repositoryname))
+
+    def __determinePrefixFlag(self: object) -> bool:
+        flag: bool = False
+        flag_raw: str = self.config.value_get("GIT", "commit_msg_svn_nr").lower()
+
+        if "y" == flag_raw[0] or "j" == flag_raw[0] or "1" == flag_raw[0]:
+            flag = True
+
+        return flag
 
     def __determineRepositoryName__(self: object) -> str:
         url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip("/"))
@@ -80,7 +91,18 @@ class TS2GSVN:
             svnXml: str = output.decode("utf-8")
             root = ET.fromstring(svnXml)
             for element in root.findall("logentry"):
-                info: TS2GSVNinfo = TS2GSVNinfo(element.find("author").text, element.find("msg").text, parser.parse(element.find("date").text), revision)
+                author: str = element.find("author").text
+                commitdate: datetime = parser.parse(element.find("date").text)
+                commitmsg_raw: str = element.find("msg").text
+                if None == commitmsg_raw:
+                    commitmsg_raw = ""
+                commitmsg_raw = commitmsg_raw.strip()
+                commitmsg: str = ""
+                if self.prefixmsg:
+                    commitmsg = "#{}: {}".format(revision, commitmsg_raw)
+                else:
+                    commitmsg = commitmsg_raw
+                info: TS2GSVNinfo = TS2GSVNinfo(author, commitmsg, commitdate, revision)
             logging.info(info)
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
