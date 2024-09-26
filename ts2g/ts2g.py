@@ -71,16 +71,32 @@ class TS2G:
         folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
 
         # Move .git folder outside of repo
+        process_git_ext_start: float = time.time()
         self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
+        process_git_ext_end: float = time.time()
+        process_git_ext_duration: float = process_git_ext_end - process_git_ext_start
+        logging.info(f"Save special dir [.git] took [{process_git_ext_duration:.2f}] seconds")
 
         # Sync folders
+        process_sync_start: float = time.time()
         dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[self.FOLDER_SVN], purge=True)
+        process_sync_stop: float = time.time()
+        process_sync_duration: float = process_sync_stop - process_sync_start
+        logging.info(f"Sync revision data took [{process_sync_duration:.2f}] seconds")
 
         # Move .git folder back to repo
+        process_git_int_start: float = time.time()
         self.oshandler.workspaceFolderRename(folder_git_dst, folder_git_src)
+        process_git_int_end: float = time.time()
+        process_git_int_duration: float = process_git_int_end - process_git_int_start
+        logging.info(f"Restore special dir [.git] took [{process_git_int_duration:.2f}] seconds")
 
         # Do git add . and git commit -m message
+        process_git_start: float = time.time()
         self.githandler.gitRepositoryAdd(commitInfo)
+        process_git_end: float = time.time()
+        process_git_duration: float = process_git_end - process_git_start
+        logging.info(f"Add and commit to git took [{process_git_duration:.2f}] seconds")
 
     def process(self: object) -> bool:
         """Initialize and start conversion process
@@ -105,13 +121,33 @@ class TS2G:
             repoNameSvn: str = ""
             for revisionNumber in range(1, (maxRevision + 1)):
                 process_start: float = time.time()
+                logging.info("-" * 30)
                 logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
+
+                # SVN Checkout/update
+                process_svn_start: float = time.time()
                 if 1 == revisionNumber:
                     repoNameSvn = self.svnhandler.checkoutRevision(revisionNumber)
                 else:
                     self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
+                process_svn_end: float = time.time()
+                process_svn_duration: float = process_svn_end - process_svn_start
+                logging.info(f"SVN checkout/update took [{process_svn_duration:.2f}] seconds")
+
+                # Read SVN revision information
+                process_rev_start: float = time.time()
                 commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
+                process_rev_end: float = time.time()
+                process_rev_duration: float = process_rev_end - process_rev_start
+                logging.info(f"Reading SVN revision meta data took [{process_rev_duration:.2f}] seconds")
+
+                # Add to git
+                process_git_start: float = time.time()
                 self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
+                process_git_end: float = time.time()
+                process_git_duration: float = process_git_end - process_git_start
+                logging.info(f"Git actions took [{process_git_duration:.2f}] seconds")
+
                 process_end: float = time.time()
                 process_duration: float = process_end - process_start
                 logging.info(f"Revision [{revisionNumber}] transferred within [{process_duration:.2f}] seconds")
