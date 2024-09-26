@@ -94,7 +94,7 @@ class TS2GSVN:
         """
         revisionName: str = "svn_" + self.repositoryname
         pathCheckout: str = self.oshandler.workspaceFolderGet(revisionName)
-        logging.info("Checkout revision [%s] to [%s]", "{}".format(revision), "{}".format(pathCheckout))
+        logging.debug("Checkout revision [%s] to [%s]", "{}".format(revision), "{}".format(pathCheckout))
         reopClient = svn.remote.RemoteClient(
             self.repositoryurl,
             username=self.config.value_get("SVN", "user"),
@@ -136,7 +136,7 @@ class TS2GSVN:
                 else:
                     commitmsg = commitmsg_raw
                 info: TS2GSVNinfo = TS2GSVNinfo(author, commitmsg, commitdate, revision)
-            logging.info(info)
+            logging.debug(info)
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
         return info

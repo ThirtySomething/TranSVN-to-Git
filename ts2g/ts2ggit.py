@@ -83,15 +83,15 @@ class TS2GGIT:
         try:
             projectFolder: str = self.gitRepositoryPath()
             projectRepo = git.Repo(projectFolder)
-            logging.info("Add changes to repository")
+            logging.debug("Add changes to repository")
             projectRepo.git.add(all=True)
-            logging.info("Perform git commit")
+            logging.debug("Perform git commit")
             commitmsg: str = commitInfo.commitmsg
             if not commitmsg:
                 commitmsg = ""
             actor: git.Actor = self.getActor(commitInfo.author)
             projectRepo.index.commit(message=commitmsg, author=actor, committer=actor, author_date=commitInfo.date, commit_date=commitInfo.date)
-            logging.info("Git commit done")
+            logging.debug("Git commit done")
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
 
