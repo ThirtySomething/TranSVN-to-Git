@@ -37,6 +37,9 @@ from ts2g.ts2gsvninfo import TS2GSVNinfo
 
 
 class TS2G:
+    FOLDER_GIT = ".git"
+    FOLDER_SVN = ".svn"
+
     """
     Class to control the process of the repository transformation
     """
@@ -64,9 +67,20 @@ class TS2G:
         # Create source and destination names for sync
         folder_src: str = self.oshandler.workspaceFolderGet(repoNameSvn)
         folder_dst: str = self.oshandler.workspaceFolderGet(repoNameGit)
+        folder_git_src: str = self.oshandler.workspaceFolderGet(os.path.join(repoNameGit, self.FOLDER_GIT))
+        folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
+
+        logging.debug("folder_git_src [%s]", folder_git_src)
+        logging.debug("folder_git_dst [%s]", folder_git_dst)
+
+        # Move .git folder outside of repo
+        self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
 
         # Sync folders
-        dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[".git", ".svn"])
+        dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[self.FOLDER_SVN], purge=True)
+
+        # Move .git folder back to repo
+        self.oshandler.workspaceFolderRename(folder_git_dst, folder_git_src)
 
         # Do git add . and git commit -m message
         self.githandler.gitRepositoryAdd(commitInfo)
