@@ -58,9 +58,9 @@ On the first startup of the script a config file is written - and then the scrip
 
 ## The process
 
-The first action is the creation of a workspace folder. Inside of this folder all work will be done.
+The first action is the creation of a workspace folder. Inside of this folder all work will be done. If there is a failure creating the folder, the program stops here.
 
-The next step is the creation of an empty empty [git][GIT] repository in the workspace folder. This repository contains the result of the transformation.
+The next step is the creation of an empty [git][GIT] repository in the workspace folder. This repository contains the result of the transformation. If there is a failure creating the repository, the program stops here.
 
 Then the latest [SVN revision][SVN] number is determined. If the URL or the credentials are invalid, the program stops here.
 
@@ -68,7 +68,9 @@ Now the loop from the first to the latest revision starts:
 
 - For the first revision do a [SVN checkout][SVN], for all others do a [SVN update to revision][SVN]
 - Determine the commit information for the [SVN revision][SVN]
-- Synchronize the [SVN][SVN] checkout to the [git][GIT] repository ignoring the `.git` and `.svn` folder
+- Move the special folder [.git][GIT] outside of the repo
+- Synchronize the [SVN][SVN] checkout to the [git][GIT] repository ignoring the and `.svn` folder with the purge option
+- Move the special folder [.git][GIT] back to the repo
 - Do `git add .` and `git commit -m "<SVN message>"` for the git repository
 
 After the last revision is converted, the [SVN checkout][SVN] will be deleted.
@@ -88,6 +90,20 @@ You can find the homepage of the projects here:
 * [GitPython][LIBGIT]
 * [svn][LIBSVN]
 * [pysvn][PYSVN]
+
+## Future options
+
+There might be some features to think about, e. g.
+
+- Make process resumeable:
+  After the script was aborted the program should do:
+  - Determine last [SVN][SVN] revision of the checkout
+  - Check location of special folder [.git][GIT]
+  - Ensure location of special folder [.git][GIT] is outside of repo
+  - Sync data
+  - Move special folder [.git][GIT] back to repo
+  - Perform [git][GIT] commit
+  - Continue loop with next revision
 
 ## SVN authors
 

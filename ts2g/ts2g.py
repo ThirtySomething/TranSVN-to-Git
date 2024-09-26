@@ -26,8 +26,8 @@ SOFTWARE.
 
 import logging
 import os
-
 import dirsync
+import time
 
 from ts2g.ts2gconfig import TS2GConfig
 from ts2g.ts2ggit import TS2GGIT
@@ -88,20 +88,23 @@ class TS2G:
         Returns:
             bool: False on any failure, otherwise true
         """
-        if False == self.oshandler.workspaceFolderCreate(""):
-            return False
-
-        if False == self.githandler.initProjectRepository():
-            return False
 
         try:
+            if False == self.oshandler.workspaceFolderCreate(""):
+                return False
+
+            if False == self.githandler.initProjectRepository():
+                return False
+
             repoNameGit: str = self.githandler.gitRepositoryName()
+            revisionLimit: int = int(self.config.value_get("SVN", "revision_limit"))
 
             maxRevision: int = self.svnhandler.getMaxRevisionNumber()
-            logging.info("Max revision of [%s] is [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision))
+            logging.info("Max revision of [%s] is [%s], limited to [%s]", "{}".format(self.svnhandler.getRepositoryUrl()), "{}".format(maxRevision), "{}".format(revisionLimit))
 
             repoNameSvn: str = ""
             for revisionNumber in range(1, (maxRevision + 1)):
+                process_start: float = time.time()
                 logging.info("Working on revision [%s/%s]", "{}".format(revisionNumber), "{}".format(maxRevision))
                 if 1 == revisionNumber:
                     repoNameSvn = self.svnhandler.checkoutRevision(revisionNumber)
@@ -109,6 +112,12 @@ class TS2G:
                     self.svnhandler.svnUpdateToRevision(repoNameSvn, revisionNumber)
                 commitInfo: TS2GSVNinfo = self.svnhandler.getCommitInfo(repoNameSvn, revisionNumber)
                 self.addRevisionToGit(repoNameGit, repoNameSvn, commitInfo)
+                process_end: float = time.time()
+                process_duration: float = process_end - process_start
+                logging.info(f"Revision [{revisionNumber}] transferred within [{process_duration:.2f}] seconds")
+                if 0 != revisionLimit and revisionLimit <= revisionNumber:
+                    logging.info(f"Revision limit of [{revisionLimit}] reached, abort")
+                    break
 
             # Delete svn folder
             folder_svn: str = self.oshandler.workspaceFolderGet(repoNameSvn)

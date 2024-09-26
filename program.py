@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 import logging.config
+import time
 
 from ts2g.ts2g import TS2G
 from ts2g.ts2gconfig import TS2GConfig
@@ -42,7 +43,10 @@ LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to convert a Subversion repository to a git repository
 if __name__ == "__main__":
+    process_start: float = time.time()
     logging.info("debugFlag is set to [%s]", "{}".format(TS2G_CONFIG.value_get("LOGGING", "loglevel").upper()))
     converter = TS2G(TS2G_CONFIG)
     status = converter.process()
-    logging.info("process result is [%s]", "{}".format(status))
+    process_end: float = time.time()
+    process_duration: float = process_end - process_start
+    logging.info(f"process result is [{status}] after [{process_duration:.2f}] seconds")

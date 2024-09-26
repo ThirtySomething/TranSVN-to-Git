@@ -44,6 +44,7 @@ class TS2GConfig(MDO):
         self.add("LOGGING", "logfile", "program.log")
         self.add("LOGGING", "loglevel", "info")
         self.add("LOGGING", "logstring", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s")
+        self.add("SVN", "revision_limit", 0)
         self.add("SVN", "password", "<enter password here>")
         self.add("SVN", "repositoryurl", "<enter svn url here>")
         self.add("SVN", "user", "<enter user here>")
