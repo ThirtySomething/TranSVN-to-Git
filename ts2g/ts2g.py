@@ -75,7 +75,7 @@ class TS2G:
         self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
         process_git_ext_end: float = time.time()
         process_git_ext_duration: float = process_git_ext_end - process_git_ext_start
-        logging.info(f"Save special dir [.git] took [{process_git_ext_duration:.2f}] seconds")
+        logging.info(f"Save special dir [{self.FOLDER_GIT}] took [{process_git_ext_duration:.2f}] seconds")
 
         # Sync folders
         process_sync_start: float = time.time()
@@ -89,7 +89,7 @@ class TS2G:
         self.oshandler.workspaceFolderRename(folder_git_dst, folder_git_src)
         process_git_int_end: float = time.time()
         process_git_int_duration: float = process_git_int_end - process_git_int_start
-        logging.info(f"Restore special dir [.git] took [{process_git_int_duration:.2f}] seconds")
+        logging.info(f"Restore special dir [{self.FOLDER_GIT}] took [{process_git_int_duration:.2f}] seconds")
 
         # Do git add . and git commit -m message
         process_git_start: float = time.time()
