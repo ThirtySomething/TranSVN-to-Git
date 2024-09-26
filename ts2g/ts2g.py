@@ -70,9 +70,6 @@ class TS2G:
         folder_git_src: str = self.oshandler.workspaceFolderGet(os.path.join(repoNameGit, self.FOLDER_GIT))
         folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
 
-        logging.debug("folder_git_src [%s]", folder_git_src)
-        logging.debug("folder_git_dst [%s]", folder_git_dst)
-
         # Move .git folder outside of repo
         self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
 
