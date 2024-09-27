@@ -43,6 +43,8 @@ class TS2GGIT:
     Class to control the git operations
     """
 
+    FOLDER_GIT = ".git"
+
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
         """Default constructor
 
@@ -55,7 +57,7 @@ class TS2GGIT:
         self.projectFolder: str = self.oshandler.workspaceFolderGet(self.config.value_get("GIT", "project"))
         logging.debug("projectFolder [%s]", "{}".format(self.projectFolder))
 
-    def getActor(self: object, name: str) -> git.Actor:
+    def gitGetActor(self: object, name: str) -> git.Actor:
         """Create actor object used in git commit based on configured usermap
 
         Args:
@@ -74,6 +76,27 @@ class TS2GGIT:
                 break
         return rval
 
+    def gitInitProjectRepository(self: object) -> bool:
+        """Create empty GIT repo
+
+        Returns:
+            bool: False on any failure, otherwise True
+        """
+        if self.oshandler.workspaceFolderExists(self.projectFolder):
+            logging.error("Git project [%s] already exists in workspace [%s]", "{}".format(self.config.value_get("GIT", "project")), "{}".format(self.oshandler.workspaceBaseGet()))
+            return False
+
+        if not self.oshandler.workspaceFolderCreate(self.config.value_get("GIT", "project")):
+            return False
+
+        projectFolder: str = self.gitRepositoryPath()
+        projectRepo = git.Repo.init(projectFolder)
+        if not projectRepo:
+            logging.error("Cannot create bare repo [%s]", "{}".format(projectFolder))
+            return False
+
+        return True
+
     def gitRepositoryAdd(self: object, commitInfo: TS2GSVNinfo):
         """Perform git add . and a git commit
 
@@ -89,7 +112,7 @@ class TS2GGIT:
             commitmsg: str = commitInfo.commitmsg
             if not commitmsg:
                 commitmsg = ""
-            actor: git.Actor = self.getActor(commitInfo.author)
+            actor: git.Actor = self.gitGetActor(commitInfo.author)
             projectRepo.index.commit(message=commitmsg, author=actor, committer=actor, author_date=commitInfo.date, commit_date=commitInfo.date)
             logging.debug("Git commit done")
         except Exception as ex:
@@ -111,23 +134,24 @@ class TS2GGIT:
         """
         return os.path.join(self.projectFolder, "")
 
-    def initProjectRepository(self: object) -> bool:
-        """Create empty GIT repo
+    def gitSpecialFolderBackup(self: object, repoName: str) -> None:
+        """Move special folder .git outside of repository
 
-        Returns:
-            bool: False on any failure, otherwise True
+        Args:
+            repoName (str): Name of repository
         """
-        if self.oshandler.workspaceFolderExists(self.projectFolder):
-            logging.error("Git project [%s] already exists in workspace [%s]", "{}".format(self.config.value_get("GIT", "project")), "{}".format(self.oshandler.workspaceBaseGet()))
-            return False
+        folder_git_src: str = self.oshandler.workspaceFolderGet(os.path.join(repoName, self.FOLDER_GIT))
+        folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
 
-        if not self.oshandler.workspaceFolderCreate(self.config.value_get("GIT", "project")):
-            return False
+        self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
 
-        projectFolder: str = self.gitRepositoryPath()
-        projectRepo = git.Repo.init(projectFolder)
-        if not projectRepo:
-            logging.error("Cannot create bare repo [%s]", "{}".format(projectFolder))
-            return False
+    def gitSpecialFolderRestore(self: object, repoName: str) -> None:
+        """Move special folder .git back to repository
 
-        return True
+        Args:
+            repoName (str): Name of repository
+        """
+        folder_git_src: str = self.oshandler.workspaceFolderGet(os.path.join(repoName, self.FOLDER_GIT))
+        folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
+
+        self.oshandler.workspaceFolderRename(folder_git_dst, folder_git_src)

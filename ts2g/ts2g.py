@@ -37,9 +37,6 @@ from ts2g.ts2gsvninfo import TS2GSVNinfo
 
 
 class TS2G:
-    FOLDER_GIT = ".git"
-    FOLDER_SVN = ".svn"
-
     """
     Class to control the process of the repository transformation
     """
@@ -67,29 +64,27 @@ class TS2G:
         # Create source and destination names for sync
         folder_src: str = self.oshandler.workspaceFolderGet(repoNameSvn)
         folder_dst: str = self.oshandler.workspaceFolderGet(repoNameGit)
-        folder_git_src: str = self.oshandler.workspaceFolderGet(os.path.join(repoNameGit, self.FOLDER_GIT))
-        folder_git_dst: str = self.oshandler.workspaceFolderGet(self.FOLDER_GIT)
 
         # Move .git folder outside of repo
         process_git_ext_start: float = time.time()
-        self.oshandler.workspaceFolderRename(folder_git_src, folder_git_dst)
+        self.githandler.gitSpecialFolderBackup(repoNameGit)
         process_git_ext_end: float = time.time()
         process_git_ext_duration: float = process_git_ext_end - process_git_ext_start
-        logging.info(f"Save special dir [{self.FOLDER_GIT}] took [{process_git_ext_duration:.2f}] seconds")
+        logging.info(f"Save special dir [{self.githandler.FOLDER_GIT}] took [{process_git_ext_duration:.2f}] seconds")
 
         # Sync folders
         process_sync_start: float = time.time()
-        dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[self.FOLDER_SVN], purge=True)
+        dirsync.sync(folder_src, folder_dst, "sync", verbose=False, exclude=[self.svnhandler.FOLDER_SVN], purge=True)
         process_sync_stop: float = time.time()
         process_sync_duration: float = process_sync_stop - process_sync_start
         logging.info(f"Sync revision data took [{process_sync_duration:.2f}] seconds")
 
         # Move .git folder back to repo
         process_git_int_start: float = time.time()
-        self.oshandler.workspaceFolderRename(folder_git_dst, folder_git_src)
+        self.githandler.gitSpecialFolderRestore(repoNameGit)
         process_git_int_end: float = time.time()
         process_git_int_duration: float = process_git_int_end - process_git_int_start
-        logging.info(f"Restore special dir [{self.FOLDER_GIT}] took [{process_git_int_duration:.2f}] seconds")
+        logging.info(f"Restore special dir [{self.githandler.FOLDER_GIT}] took [{process_git_int_duration:.2f}] seconds")
 
         # Do git add . and git commit -m message
         process_git_start: float = time.time()
@@ -109,7 +104,7 @@ class TS2G:
             if False == self.oshandler.workspaceFolderCreate(""):
                 return False
 
-            if False == self.githandler.initProjectRepository():
+            if False == self.githandler.gitInitProjectRepository():
                 return False
 
             repoNameGit: str = self.githandler.gitRepositoryName()

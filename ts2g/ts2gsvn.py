@@ -44,6 +44,8 @@ class TS2GSVN:
     Class to control the Subversion operations
     """
 
+    FOLDER_SVN = ".svn"
+
     def __init__(self: object, config: TS2GConfig, oshandler: TS2GOS) -> None:
         """Default constructor
 
@@ -54,34 +56,10 @@ class TS2GSVN:
         self.config: TS2GConfig = config
         self.oshandler: TS2GOS = oshandler
         self.repositoryurl: str = self.config.value_get("SVN", "repositoryurl")
-        self.repositoryname: str = self.__determineRepositoryName__()
-        self.prefixmsg: bool = self.__determinePrefixFlag__()
+        self.repositoryname: str = self.determineRepositoryName()
+        self.prefixmsg: bool = self.determinePrefixFlag()
         logging.debug("repositoryurl [%s]", "{}".format(self.repositoryurl))
         logging.debug("repositoryname [%s]", "{}".format(self.repositoryname))
-
-    def __determinePrefixFlag__(self: object) -> bool:
-        """Determine if prefix for commit messages should be used or not
-
-        Returns:
-            bool: True if prefix has to be used, otherwise False
-        """
-        flag: bool = False
-        flag_raw: str = self.config.value_get("GIT", "commit_msg_svn_nr").lower()
-
-        if "y" == flag_raw[0] or "j" == flag_raw[0] or "1" == flag_raw[0]:
-            flag = True
-
-        return flag
-
-    def __determineRepositoryName__(self: object) -> str:
-        """Strip repository name from URL
-
-        Returns:
-            str: Name of repository
-        """
-        url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip("/"))
-        path_parts = url_parts[2].rpartition("/")
-        return path_parts[2]
 
     def checkoutRevision(self: object, revision: int) -> str:
         """Checkout specific SVN revision
@@ -102,6 +80,30 @@ class TS2GSVN:
         )
         reopClient.checkout(pathCheckout, revision)
         return revisionName
+
+    def determinePrefixFlag(self: object) -> bool:
+        """Determine if prefix for commit messages should be used or not
+
+        Returns:
+            bool: True if prefix has to be used, otherwise False
+        """
+        flag: bool = False
+        flag_raw: str = self.config.value_get("GIT", "commit_msg_svn_nr").lower()
+
+        if "y" == flag_raw[0] or "j" == flag_raw[0] or "1" == flag_raw[0]:
+            flag = True
+
+        return flag
+
+    def determineRepositoryName(self: object) -> str:
+        """Strip repository name from URL
+
+        Returns:
+            str: Name of repository
+        """
+        url_parts = urllib.parse.urlparse(self.repositoryurl.rstrip("/"))
+        path_parts = url_parts[2].rpartition("/")
+        return path_parts[2]
 
     def getCommitInfo(self: object, checkout: str, revision: int) -> TS2GSVNinfo:
         """Determine SVN commit information for given revision number
@@ -141,6 +143,17 @@ class TS2GSVN:
             logging.error("Exception [%s]", "{}".format(ex))
         return info
 
+    def getMaxRevisionNumber(self: object) -> int:
+        """Determine maximum number of revisions
+
+        Returns:
+            int: Maximum revision number of repository
+        """
+        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.value_get("SVN", "user"), password=self.config.value_get("SVN", "password"))
+        repoInfo = reopClient.info()
+        revision: int = repoInfo["entry_revision"]
+        return revision
+
     def svnUpdateToRevision(self: object, checkout: str, revision: int) -> None:
         """Update SVN checkout to given revision
 
@@ -159,17 +172,6 @@ class TS2GSVN:
             svnXml: str = output.decode("utf-8")
         except Exception as ex:
             logging.error("Exception [%s]", "{}".format(ex))
-
-    def getMaxRevisionNumber(self: object) -> int:
-        """Determine maximum number of revisions
-
-        Returns:
-            int: Maximum revision number of repository
-        """
-        reopClient = svn.remote.RemoteClient(self.repositoryurl, username=self.config.value_get("SVN", "user"), password=self.config.value_get("SVN", "password"))
-        repoInfo = reopClient.info()
-        revision: int = repoInfo["entry_revision"]
-        return revision
 
     def getRepositoryName(self: object) -> str:
         """Get name of SVN repository

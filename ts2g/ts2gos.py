@@ -61,10 +61,10 @@ class TS2GOS:
         Args:
             workspace (str): Name of workspace folder
         """
-        self.workspaceBase: str = self.__determineWorkspaceBase__(workspace)
+        self.workspaceBase: str = self.determineWorkspaceBase(workspace)
         logging.info("workspaceBase [%s]", "{}".format(self.workspaceBase))
 
-    def __determineWorkspaceBase__(self: object, foldername: str) -> str:
+    def determineWorkspaceBase(self: object, foldername: str) -> str:
         """Determine full os path to workspace folder in relation script path
 
         Args:
